@@ -47,19 +47,24 @@ async function verifyToken(req, res, next) {
  * @param {Object} res - The Express response object
  * @returns {void}
  */
-app.get("/get-user", verifyToken, async (req, res) => {
+app.get("/get-users", verifyToken, async (req, res) => {
 	try {
-		const userRef = db.collection("Users").doc(req.user.uid);
-		const doc = await userRef.get();
+		// Get all documents from the Users collection
+		const usersRef = db.collection("Users");
+		const snapshot = await usersRef.get();
 
-		if (!doc.exists) {
-			return res.status(404).send("User not found");
+		if (snapshot.empty) {
+			return res.status(404).send("No users found");
 		}
 
-		res.status(200).json(doc.data());
+		// Map over the documents and extract their data
+		const usersList = snapshot.docs.map((doc) => doc.data());
+
+		// Return the list of users
+		res.status(200).json(usersList);
 	} catch (error) {
-		console.error("Error fetching user:", error);
-		res.status(500).send("Failed to fetch user");
+		console.error("Error fetching users:", error);
+		res.status(500).send("Failed to fetch users");
 	}
 });
 
